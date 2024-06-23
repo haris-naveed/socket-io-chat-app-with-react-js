@@ -1,13 +1,41 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 import io from "socket.io-client";
 import Chat from "./commponents/Chat";
+import axios from "axios";
 
 const socket = io.connect("http://localhost:3001");
 function App() {
+  const [messages, setMessages] = useState([]);
+
   const [username, setUsername] = useState("");
   const [room, setRoom] = useState("");
   const [showChat, setShowChat] = useState(false);
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const response = await axios.get("http://localhost:3001/messages");
+        setMessages(response.data);
+        console.log("fromApi", response.data);
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+      }
+    };
+
+    fetchMessages();
+  }, [socket]);
+
+  const fetchMessages = async () => {
+    try {
+      const response = await axios.get("http://localhost:3001/messages");
+      setMessages(response.data);
+      console.log("fromApi", response.data);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    }
+  };
+
   const joinRoom = () => {
     if (username !== "" && room !== "") {
       console.log(username, room);
@@ -15,6 +43,8 @@ function App() {
       setShowChat(true);
     }
   };
+
+  console.log("first");
   return (
     <div className="App">
       {!showChat ? (
@@ -35,7 +65,13 @@ function App() {
           </div>
         </>
       ) : (
-        <Chat socket={socket} username={username} room={room} />
+        <Chat
+          socket={socket}
+          username={username}
+          room={room}
+          messagesFromDB={messages}
+          fetchMessages={fetchMessages}
+        />
       )}
     </div>
   );

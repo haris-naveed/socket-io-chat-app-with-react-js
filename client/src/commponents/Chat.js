@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import ScrollToBottom from "react-scroll-to-bottom";
+import CustomScrollToBottom from "./CustomScrollToBottom";
 
-function Chat({ socket, username, room }) {
+function Chat({ socket, username, room, messagesFromDB, fetchMessages }) {
   const [currentMessage, setCurrentMessage] = useState("");
   const [messageList, setMessageList] = useState([]);
 
@@ -19,12 +20,14 @@ function Chat({ socket, username, room }) {
       await socket.emit("send_message", messageData);
       setMessageList((list) => [...list, messageData]);
       setCurrentMessage("");
+      fetchMessages();
     }
   };
   useEffect(() => {
     socket.on("recieve_message", (data) => {
       console.log(data);
       setMessageList((list) => [...list, data]);
+      fetchMessages();
     });
   }, [socket]);
 
@@ -34,8 +37,51 @@ function Chat({ socket, username, room }) {
         <p>Live Chat</p>
       </div>
       <div className="chat-body">
-        <ScrollToBottom className="message-container">
-          {messageList.map((messageContent) => {
+        <CustomScrollToBottom className="message-container">
+          {messagesFromDB &&
+            messagesFromDB.map((messageContent) => {
+              return (
+                <div
+                  className="message"
+                  id={username === messageContent.author ? "you" : "other"}
+                  key={Math.random(1000)}
+                >
+                  <div>
+                    <div className="message-content">
+                      <p>{messageContent.message}</p>
+                    </div>
+                    <div className="message-meta">
+                      <p id="time">{messageContent.time}</p>
+                      <p id="author">{messageContent.author}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+        </CustomScrollToBottom>
+        {/* <ScrollToBottom className="message-container">
+          {messagesFromDB &&
+            messagesFromDB.map((messageContent) => {
+              return (
+                <div
+                  className="message"
+                  id={username === messageContent.author ? "you" : "other"}
+                  key={Math.random(1000)}
+                >
+                  <div>
+                    <div className="message-content">
+                      <p>{messageContent.message}</p>
+                    </div>
+                    <div className="message-meta">
+                      <p id="time">{messageContent.time}</p>
+                      <p id="author">{messageContent.author}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+        </ScrollToBottom> */}
+        {/* {messageList.map((messageContent) => {
             return (
               <div
                 className="message"
@@ -53,8 +99,7 @@ function Chat({ socket, username, room }) {
                 </div>
               </div>
             );
-          })}
-        </ScrollToBottom>
+          })} */}
       </div>
       <div className="chat-footer">
         <input
